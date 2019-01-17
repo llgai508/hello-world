@@ -1,146 +1,94 @@
 Bootstrap: docker
-From: ubuntu:16.04
+FROM: debian:9.3-slim
+# Debian Stretch without manpages and other files
+# usually not needed in containers.
 
 %help
-Ubuntu16.04 with root v06.08.06 cuda9 cudnn7
-DL/ML packages  : sc-learn
-Sci.  packages  : numpy pandas sc-image matplotlib opencv-python
-Basic python    : ipython jupyter yaml pygments six zmq wheel h5py tqdm
-Development kit : g++/gcc cython nvcc libqt4-dev python-dev
-Utility kit     : git wget emacs vim unzip
 
-To start your container simply try
-singularity exec THIS_CONTAINER.simg bash
-
-To use GPUs, try
-singularity exec --nv THIS_CONTAINER.simg bash
-
-Based on the recipe "Singularity.Ubuntu16.04-Basic" by drinkingkazu. Can be found on
-https://github.com/DeepLearnPhysics/larcv2-singularity
-    -All packages are installed using pip3 for compatibility with Python3.
-
-#%files
-#project-config.jam /tmp/project-config.jam
-#build.sh /tmp/build.sh
-
-%labels
-Maintainer jhamer90811
-Version 7/25/18
-
-#------------
-# Global installation
-#------------
-%environment
-    # for system
-    export XDG_RUNTIME_DIR=/tmp/$USER
-    # for ROOT
-    export ROOTSYS=/usr/local/root
-    export PATH=${ROOTSYS}/bin:${PATH}
-    export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
-    export PYTHONPATH=${ROOTSYS}/lib:${PYTHONPATH}
-    export PATH=/usr/lib64/openmpi/bin/:$PATH
+Contains R version 3.3.3.
 
 %post
-    mkdir /scratch /data /lfstev
 
-    # apt-get
-    apt-get -y update
-    apt-get -y install dpkg-dev g++ gcc binutils libqt4-dev python3-dev python3-tk python3-pip git wget emacs vim unzip pkg-config
-    apt-get -y install protobuf-compiler
+# Packages needed inside the container.
+export CONTAINER_SOFTWARE="gfortran g++ gcc make libcurl3-gnutls"
+## Set build variables.
+# Packages needed only for the build process.
+export BUILD_SOFTWARE="wget zlib1g-dev libbz2-dev liblzma-dev libpcre3-dev libcurl4-gnutls-dev"
+# Needed for downloading source.
+export R_BASE_URI="https://cran.r-project.org/src/base/R-3/"
+export R_FOLDER_NAME="R-3.3.3"
+export R_PACKAGE_NAME="${R_FOLDER_NAME}.tar.gz"
+# Set paths to facilitate the build process.
+export BUILDHOME="/tmp"
 
-    # asciinema
-    apt-get -y install software-properties-common python-software-properties
-    apt-add-repository -y ppa:zanchey/asciinema
-    apt-get -y update
-    apt-get -y install asciinema
-    apt-get -y install libhdf5-dev
+# Install build and run requirements.
+apt-get update
+apt-get install $BUILD_SOFTWARE $CONTAINER_SOFTWARE -y
 
-    # ROOT
-    wget https://root.cern.ch/download/root_v6.08.06.Linux-ubuntu16-x86_64-gcc5.4.tar.gz
-    tar -xzf root_v6.08.06.Linux-ubuntu16-x86_64-gcc5.4.tar.gz
-    rm root_v6.08.06.Linux-ubuntu16-x86_64-gcc5.4.tar.gz
-    mv root /usr/local/root
-    export ROOTSYS=/usr/local/root
-    mkdir $ROOTSYS/tmp
-    #mv /tmp/build.sh $ROOTSYS/tmp/build.sh
-    #mv /tmp/project-config.jam $ROOTSYS/tmp/project-config.jam
-    export PATH=${ROOTSYS}/bin:${PATH}
-    export PATH=/usr/lib/python3.5/site-packages:/usr/local/lib/python3.5/dist-packages:${PATH}
-    export LD_LIBRARY_PATH=${ROOTSYS}/lib:${LD_LIBRARY_PATH}
-    export LD_LIBRARY_PATH=/usr/local/lib:/usr/lib:${LD_LIBRARY_PATH}
-    export PYTHONPATH=${ROOTSYS}/lib:/usr/lib/python3.5/site-packages:/usr/local/lib/python3.5/dist-packages:${PYTHONPATH}
+# Get R Package
+wget ${R_BASE_URI}${R_PACKAGE_NAME}
+tar -xf $R_PACKAGE_NAME
 
-    #echo $LD_LIBRARY_PATH
-    #echo $HOME
+# Build R
+cd $R_FOLDER_NAME
+./configure --with-readline=no --with-x=no
+make
+make install
 
-    # pip basics
-    pip3 --no-cache-dir --disable-pip-version-check install --upgrade setuptools
-    pip3 --no-cache-dir --disable-pip-version-check install numpy wheel zmq six pygments pyyaml cython gputil psutil humanize h5py tqdm scipy seaborn tables google cmake
-    pip3 --no-cache-dir --disable-pip-version-check install python3-protobuf protobuf
-    pip3 --no-cache-dir --disable-pip-version-check install root_numpy
-    pip3 --no-cache-dir --disable-pip-version-check install matplotlib pandas scikit-image scikit-learn Pillow opencv-python
-    pip3 --no-cache-dir --disable-pip-version-check install 'ipython<6.0'
-    pip3 --no-cache-dir --disable-pip-version-check install jupyter notebook
+# Removing installation overhead.
+ 
+cd
+rm -rf /tmp/*
+apt-get purge $BUILD_SOFTWARE -y
+apt-get autoclean -y
+apt-get autoremove -y
+rm -rf /var/lib/apt/lists/*
 
-    # install boost
+%test
 
-    apt-get -y update
-    apt-get -y install build-essential
-    apt-get -y install boost*  && \
-    apt-get -y remove  boost*
-    apt-get -y install libicu-dev build-essential libbz2-dev bzip2 texinfo zlib1g openmpi-bin openmpi-doc libopenmpi-dev mpich autotools-dev
-    apt-get -y install libboost-all-dev
+# Can we call R?
+R --version
+I have no name!@data2:~/mysing$ 
+I have no name!@data2:~/mysing$ 
+I have no name!@data2:~/mysing$  
+I have no name!@data2:~/mysing$ vi Singularity 
+bash: vi: command not found
+I have no name!@data2:~/mysing$ exit
+gail01@data2: ~/mysing $ vi Singularity 
 
-    #chmod +x /tmp/build.sh
-    #chmod +x /tmp/project-config.jam
-    #mkdir /tmp/boost
-    #/tmp/build.sh
-    #ldconfig
+cd /tmp
 
-    #apt-get -y install libcgal-dev libeigen3-dev libcgal-qt5-dev
-    apt-get -y install libgmp-dev libgmp10 libgmp10-doc libgmp3-dev libgmpxx4ldbl
-    apt-get -y install libmpfr-dev libmpfr-doc libmpfr4 libmpfr4-dbg
+# Install dev libraries
+apt-get update \
+&& apt-get install -y --no-install-recommends \
+curl \
+unzip \
+gzip \
+bzip2 \
+ca-certificates \
+build-essential \
+gfortran \
+libgfortran-6-dev \
+libgomp1 \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/* /var/log/dpkg.log
 
-    apt-get -y build-dep cgal
-    apt-get -y install libqt5svg5-dev qtscript5-dev libqt5opengl5-dev
-
-    mkdir CGAL_4_11
-    cd CGAL_4_11
-    wget https://github.com/CGAL/cgal/releases/download/releases%2FCGAL-4.11/CGAL-4.11.zip
-    unzip CGAL-4.11.zip
-    rm CGAL-4.11.zip
-    cd CGAL-4.11
-    cmake .
-    make
-
-    export CMAKE_MODULE_PATH=/CGAL_4_11/CGAL-4.11:${CMAKE_MODULE_PATH}
-    export CGAL_DIR=/CGAL_4_11/CGAL-4.11
-
-    #apt-get -y install  libcgal11v5 libcgal-dev libcgal-qt5-11 libcgal-qt5-dev libcgal-demo libcgal-ipelets
-
-
-    apt-get -y install libeigen3-dev libeigen3-doc libmrpt-dev
-
-    #install GUDHI
-    mkdir /gudhi
-    cd /gudhi
-    wget https://gforge.inria.fr/frs/download.php/latestzip/5253/library-latest.zip
-    unzip library-latest.zip
-    rm library-latest.zip
-    tar -xf 2018-06-14-13-32-49_GUDHI_2.2.0.tar.gz
-    rm 2018-06-14-13-32-49_GUDHI_2.2.0.tar.gz
-    cd 2018-06-14-13-32-49_GUDHI_2.2.0
-    mkdir build
-    cd build
-    cmake -DPython_ADDITIONAL_VERSIONS=3 ..
-    make cython
-
-    pip3 install --upgrade python3-protobuf
-
-    cp -r /gudhi /usr/lib/python3.5/site-packages/gudhi
-    cp -r /gudhi /usr/local/lib/python3.5/dist-packages/gudhi
-
-    cp cython/gudhi.cpython-35m-x86_64-linux-gnu.so /usr/lib/python3.5/lib-dynload
-
-    rm -rf /gudhi
-
+# R, Python, SoS and DSC
+MINICONDA_VERSION=4.5.11
+PATH=/opt/miniconda3/bin:$PATH
+curl https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-Linux-x86_64.sh -o MCON.sh \
+&& /bin/bash MCON.sh -b -p /opt/miniconda3 \
+&& ln -s /opt/miniconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
+&& conda install matplotlib==3.0.2 seaborn==0.9.0 \
+&& conda install -c conda-forge r-base==3.5.1 sos==0.17.7 dsc==0.3.1.2 rpy2==2.9.4 \
+&& conda clean --all -tipsy
+%environment
+export MINICONDA_VERSION=4.5.11
+export PATH=/opt/miniconda3/bin:$PATH
+export SuSiE_VERSION=8a4f7177c0031255901083fa0f62555307acb6d9
+export R_ENVIRON_USER=""
+export R_PROFILE_USER=""
+export R_LIBS_USER=' '
+export MKL_THREADING_LAYER=GNU
+%runscript
+echo "helloworld from Lili"
