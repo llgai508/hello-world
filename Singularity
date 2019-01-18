@@ -70,8 +70,8 @@ curl -L https://raw.githubusercontent.com/stephenslab/susieR/${SuSiE_VERSION}/in
 && chmod +x /usr/local/bin/dap-g.py
 
 # DSC R-utils
-#R --slave -e "devtools::install_github('rstudio/reticulate')"
-#R --slave -e "devtools::install_github('stephenslab/dsc@v0.3.1.2', subdir = 'dscrutils')"
+R --slave -e "devtools::install_github('rstudio/reticulate')"
+R --slave -e "devtools::install_github('stephenslab/dsc@v0.3.1.2', subdir = 'dscrutils')"
 
 # susieR 
 #R --slave -e "devtools::install_github('stephenslab/susieR', ref = '"${SuSiE_VERSION}"')"
