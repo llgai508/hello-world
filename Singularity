@@ -5,8 +5,7 @@ MAINTAINER Gao Wang, gaow@uchicago.edu
 %post
 
 cd /tmp
-mkdir test2
-cd test2
+
 # Install dev libraries
 apt-get update \
 && apt-get install -y --no-install-recommends \
@@ -30,14 +29,14 @@ curl https://repo.continuum.io/miniconda/Miniconda3-$MINICONDA_VERSION-Linux-x86
 && ln -s /opt/miniconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh \
 && conda install matplotlib==3.0.2 seaborn==0.9.0 \
 && conda install -c conda-forge r-base==3.5.1 sos==0.17.7 dsc==0.3.1.2 rpy2==2.9.4 \
-&& conda clean --all -tipsy && rm -rf /tmp/test2/* $HOME/.cache
+&& conda clean --all -tipsy && rm -rf /tmp/* $HOME/.cache
 pip install sos-notebook==0.17.3 jupyter_contrib_nbextensions==0.5.0 --no-cache-dir
 
 # Packages for building and running susieR vignettes
 conda install -c conda-forge r-devtools r-testthat r-openssl r-reshape r-ggplot2 r-cowplot \
 r-profvis r-microbenchmark r-pkgdown r-dplyr r-stringr r-readr r-magrittr \
 r-matrixstats r-glmnet \
-libiconv && conda clean --all -tipsy && rm -rf /tmp/test2/* $HOME/.cache
+libiconv && conda clean --all -tipsy && rm -rf /tmp/* $HOME/.cache
 ln -s /bin/tar /bin/gtar
 
 # Large scale regression related tools for running some susieR vignettes
@@ -48,14 +47,14 @@ R --slave -e "devtools::install_github('hazimehh/L0Learn')"
 apt-get update && apt-get install -y --no-install-recommends libgsl-dev libgsl2 libatlas3-base liblapack-dev && apt-get clean
 curl -L https://github.com/fhormoz/caviar/tarball/743038a32ae66ea06ee599670cb7939fb80a923f -o caviar.tar.gz \
 && tar -zxvf caviar.tar.gz && cd fhormoz-caviar-*/CAVIAR-C++ && make \
-&& mv CAVIAR eCAVIAR mupCAVIAR setCAVIAR /usr/local/bin && rm -rf /tmp/test2/*
+&& mv CAVIAR eCAVIAR mupCAVIAR setCAVIAR /usr/local/bin && rm -rf /tmp/*
 
 curl -L https://github.com/xqwen/dap/tarball/ef11b263ae5e11b9e2e295757927877c03274095 -o dap.tar.gz \
-&& tar -zxvf dap.tar.gz && cd xqwen-dap-*/dap_src && make && mv dap-g /usr/local/bin && rm -rf /tmp/test2/*
+&& tar -zxvf dap.tar.gz && cd xqwen-dap-*/dap_src && make && mv dap-g /usr/local/bin && rm -rf /tmp/*
 
 curl -L http://www.christianbenner.com/finemap_v1.1_x86_64.tgz -o finemap.tgz \
 && tar zxvf finemap.tgz && mv finemap_v1.1_x86_64/finemap_v1.1_x86_64 /usr/local/bin/finemap \
-&& chmod +x /usr/local/bin/finemap && rm -rf /tmp/test2/*
+&& chmod +x /usr/local/bin/finemap && rm -rf /tmp/*
 
 SuSiE_VERSION=8a4f7177c0031255901083fa0f62555307acb6d9
 
@@ -69,15 +68,6 @@ curl -L https://raw.githubusercontent.com/stephenslab/susieR/${SuSiE_VERSION}/in
 curl -L https://raw.githubusercontent.com/stephenslab/susieR/${SuSiE_VERSION}/inst/code/dap-g.py -o /usr/local/bin/dap-g.py \
 && chmod +x /usr/local/bin/dap-g.py
 
-# DSC R-utils
-R --slave -e "devtools::install_github('rstudio/reticulate')"
-R --slave -e "devtools::install_github('stephenslab/dsc@v0.3.1.2', subdir = 'dscrutils')"
-
-# susieR 
-#R --slave -e "devtools::install_github('stephenslab/susieR', ref = '"${SuSiE_VERSION}"')"
-
-# Benchmark related
-#R --slave -e "install.packages('abind', repos='http://cran.us.r-project.org')"
 
 
 # Prevent local config / packages from being loaded
